@@ -220,6 +220,21 @@ individual_data %>%
     max.stays = max(stay_in_pen)
   )
 
+## assess repeat detections of same animal for RE comment during R1
+individual_data%>%
+  distinct(Wii_ID,Year)%>%
+  group_by(Wii_ID)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(count=n())
+
+individual_data%>%
+  distinct(Wii_ID,Year)%>%
+  group_by(Wii_ID)%>%
+  summarise(n=n())%>%
+  ggplot(aes(x=n))+
+  geom_histogram()
+
 
 ### Correlation amongst all health metrics
 M <- cor(
@@ -380,6 +395,41 @@ nutr.comp.betas <- nutr.plot %>%
     legend.position = "bottom"
   ) +
   guides(color = guide_legend(nrow = 3, byrow = TRUE))
+
+## compare between all KZ vs first cap only KZ
+nutr.comparepooled <- nutr.plot %>%
+  filter(value < 1000, Herd=="Klinse-Za") %>%
+  group_by(name)%>%
+  summarise(median=median(value),
+            sd=sd(value),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                           TRUE~0),
+            ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  select(type=name, pooled)%>%
+  left_join(nutr.plot %>%
+          filter(value < 1000, Herd=="Klinse-Za") %>%
+          distinct(Wii_ID, name, .keep_all = TRUE)%>%
+          group_by(name)%>%
+          summarise(median=median(value),
+                    sd=sd(value),
+                    lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                                  TRUE~0),
+                    ucl=median+(1.96*sd))%>%
+            mutate(single=paste0(median%>%round(2),
+                                 " (",
+                                 lcl%>%round(2),
+                                 "-",
+                                 ucl%>%round(2),
+                                 ")"))%>%
+            select(type=name, single),
+          by="type")
+
 
 ## stats if KZ nutrients are different than other herds
 
@@ -576,8 +626,20 @@ anova(m1, m1a)
 
 ## No Evidence for RE for cap loc
 
+## need RE for individual?
+m1 <- lmer(value ~ stay_in_pen + (1 | Year), data = CalvingNutri.long %>% drop_na(stay_in_pen, value, age_clean) %>% filter(name == "Zn (ug/mL)"))
+m1a <- lmer(value ~ stay_in_pen + (1 | Year) + (1 | Wii_ID), data = CalvingNutri.long %>% drop_na(stay_in_pen, value, age_clean) %>% filter(name == "Zn (ug/mL)"))
+anova(m1, m1a)
 
+m1 <- lmer(value ~ stay_in_pen + (1 | Year), data = CalvingNutri.long %>% drop_na(stay_in_pen, value, age_clean) %>% filter(name == "Se (ug/mL)"))
+m1a <- lmer(value ~ stay_in_pen + (1 | Year) + (1 | Wii_ID), data = CalvingNutri.long %>% drop_na(stay_in_pen, value, age_clean) %>% filter(name == "Se (ug/mL)"))
+anova(m1, m1a)
 
+m1 <- lmer(value ~ stay_in_pen + (1 | Year), data = CalvingNutri.long %>% drop_na(stay_in_pen, value, age_clean) %>% filter(name == "Mn (ng/mL)"))
+m1a <- lmer(value ~ stay_in_pen + (1 | Year) + (1 | Wii_ID), data = CalvingNutri.long %>% drop_na(stay_in_pen, value, age_clean) %>% filter(name == "Mn (ng/mL)"))
+anova(m1, m1a)
+
+## No Evidence for RE for individual
 
 ## check stay in pen stats
 ## controlling for age
@@ -731,6 +793,41 @@ haptoglobin <- individual_data %>%
   drop_na(calf_succ)
 
 ## mean
+
+hapto.comparepooled <- haptoglobin %>%
+  drop_na(`Haptoglobin g/L`)%>%
+  summarise(median=median(`Haptoglobin g/L`),
+            sd=sd(`Haptoglobin g/L`),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd))%>%
+  mutate(type="Haptoglobin g/L",
+         pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  select(type, pooled)%>%
+  left_join(haptoglobin %>%
+              drop_na(`Haptoglobin g/L`)%>%
+              distinct(Wii_ID,.keep_all = TRUE)%>%
+              summarise(median=median(`Haptoglobin g/L`),
+                        sd=sd(`Haptoglobin g/L`),
+                        lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                                      TRUE~0),
+                        ucl=median+(1.96*sd))%>%
+              mutate(type="Haptoglobin g/L",
+                     single=paste0(median%>%round(2),
+                                   " (",
+                                   lcl%>%round(2),
+                                   "-",
+                                   ucl%>%round(2),
+                                   ")"))%>%
+              select(type, single),
+              
+            by="type")
+
 haptoglobin %>%
   drop_na(`Haptoglobin g/L`) %>%
   summarise(
@@ -865,13 +962,39 @@ HairCort <- individual_data %>%
   mutate(weight = as.numeric(weight))
 
 ## mean
-HairCort %>%
-  drop_na(hair_cort) %>%
-  summarise(
-    mean.cort = mean(hair_cort),
-    se.cort = sd(hair_cort) / sqrt(n()),
-    n = n()
-  )
+cort.comparepooled <- individual_data %>%
+  drop_na(hair_cort)%>%
+  summarise(median=median(hair_cort),
+            sd=sd(hair_cort),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd))%>%
+  mutate(type="Hair cortisol (pg/mg)",
+         pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  select(type, pooled)%>%
+  left_join(individual_data %>%
+              drop_na(hair_cort)%>%
+              distinct(Wii_ID,.keep_all = TRUE)%>%
+              summarise(median=median(hair_cort),
+                        sd=sd(hair_cort),
+                        lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                                      TRUE~0),
+                        ucl=median+(1.96*sd))%>%
+              mutate(type="Hair cortisol (pg/mg)",
+                     single=paste0(median%>%round(2),
+                                   " (",
+                                   lcl%>%round(2),
+                                   "-",
+                                   ucl%>%round(2),
+                                   ")"))%>%
+              select(type, single),
+            
+            by="type")
 
 # remove outlier
 HairCort <- HairCort %>%
@@ -1338,7 +1461,7 @@ pathogens <- individual_data %>%
 
 
 ##prevelance
-pathogens%>%
+patho.prevalence <- pathogens%>%
   group_by(name)%>%
   #distinct(Wii_ID,.keep_all=TRUE)%>%
   distinct(Wii_ID,Year, .keep_all=TRUE)%>%
@@ -1347,8 +1470,47 @@ pathogens%>%
             total=pos+neg,
             prev=pos/total,
             sd=sqrt((prev*(1-prev))/total),
-            lcl=prev-(1.96*sd),
+            lcl=case_when(prev-(1.96*sd)>0~prev-(1.96*sd),
+                          TRUE~0),
             ucl=prev+(1.96*sd))
+
+
+patho.comparepooled  <- patho.prevalence%>%
+  mutate(pooled=paste0(prev%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  select(name,pooled)%>%
+  left_join(pathogens%>%
+              group_by(name)%>%
+              distinct(Wii_ID,.keep_all=TRUE)%>%
+              summarize(pos=sum(value=="Positive"),
+                        neg=sum(value=="Negative"),
+                        total=pos+neg,
+                        prev=pos/total,
+                        sd=sqrt((prev*(1-prev))/total),
+                        lcl=case_when(prev-(1.96*sd)>0~prev-(1.96*sd),
+                                      TRUE~0),
+                        ucl=prev+(1.96*sd))%>%
+              mutate(single=paste0(prev%>%round(2),
+                                   " (",
+                                   lcl%>%round(2),
+                                   "-",
+                                   ucl%>%round(2),
+                                   ")"))%>%
+              select(name,single),
+            by="name")%>%
+  rename(type=name)
+
+##print all compares
+nutr.comparepooled%>%
+  rbind(patho.comparepooled)%>%
+  rbind(cort.comparepooled)%>%
+  rbind(hapto.comparepooled)%>%
+  write_csv(here::here("output/tables/compare_pooled.csv"))
+  
 
 
 ## plot
