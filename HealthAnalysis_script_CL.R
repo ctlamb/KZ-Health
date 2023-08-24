@@ -16,6 +16,7 @@ library(ggpubr)
 library(FSA)
 library(corrplot)
 library(scales)
+library(rstatix)
 library(tidyverse)
 library(tidylog)
 
@@ -232,6 +233,15 @@ individual_data%>%
   distinct(Wii_ID,Year)%>%
   group_by(Wii_ID)%>%
   summarise(n=n())%>%
+  drop_na(n)%>%
+  summarise(mean=mean(n),
+            sd=sd(n),
+            se=sd/sqrt(n()))
+
+individual_data%>%
+  distinct(Wii_ID,Year)%>%
+  group_by(Wii_ID)%>%
+  summarise(n=n())%>%
   ggplot(aes(x=n))+
   geom_histogram()
 
@@ -429,6 +439,60 @@ nutr.comparepooled <- nutr.plot %>%
                                  ")"))%>%
             select(type=name, single),
           by="type")
+
+##summary table
+nutr.summary <- CalvingNutri.long %>%
+  filter(value < 1000) %>%
+  drop_na(value)%>%
+  group_by(name)%>%
+  mutate(median=median(value),
+            sd=sd(value),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  group_by(name,loc.lastyr,pooled)%>%
+  summarise(median=median(value),
+         sd=sd(value),
+         lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                       TRUE~0),
+         ucl=median+(1.96*sd),
+         n=n(),
+         min=min(Year),
+         max=max(Year))%>%
+  mutate(values=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"),
+         `n (years)`=paste0(n,
+                  " (",
+                  min,
+                  "-",
+                  max,
+                  ")"))%>%
+  select(name, loc.lastyr, pooled,values,`n (years)`)%>%
+  pivot_wider(names_from=loc.lastyr, values_from=c("values","n (years)"))%>%
+  mutate(class="Trace minerals",
+         sample="blood serum",
+         collection="at capture")%>%
+  ungroup
+
+nutr.summary <- nutr.summary%>%
+  left_join(CalvingNutri.long %>%
+           filter(value < 1000) %>%
+           drop_na(value)%>%
+           group_by(name)%>%
+           kruskal_test(value ~ loc.lastyr)%>%
+             select(name,`p value (Pen vs. Free-range)`=p ),
+           by="name")
+
 
 
 ## stats if KZ nutrients are different than other herds
@@ -778,6 +842,35 @@ ggarrange(ggarrange(nutr.repro, nutr.beta, ncol = 1, nrow = 2, labels = c("A", "
 ggsave(here::here("output", "plots", "mineral_plate.png"), width = 11, height = 9, bg = "white")
 
 
+nutr.repro2 <- ggplot(CalvingNutri.long %>%
+                       drop_na(stay_in_pen, value, calf_3), aes(x = calf_3, y = value, fill = name, color = name)) +
+  # ggdist::stat_halfeye( width =1, .width = 0, alpha=0.6,justification = -.2, point_colour = NA)+
+  geom_boxplot(position = position_dodge(0.3), width = .3, alpha = 0.4, show_guide = FALSE) +
+  # geom_point(position=position_dodge(0.3),alpha = .2, show_guide=FALSE)+
+  labs(y = "Mineral level", x = "Reproductive outcome") +
+  theme_ipsum() +
+  theme(
+    axis.title.x = element_text(size = 18, margin = margin(t = 10, r = 0, b = 0, l = 0)),
+    axis.title.y = element_text(size = 18, margin = margin(t = 0, r = 10, b = 0, l = 0)),
+    axis.text.x = element_text(size = 13, angle = 35, hjust = 1),
+    axis.text.y = element_text(size = 13),
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.position = "none"
+  ) +
+  scale_y_continuous(breaks = breaks_pretty(n = 3)) +
+  facet_wrap(vars(name), scales = "free_y", ncol = 2)
+
+
+ggarrange(nutr.repro2, nutr.beta, ncol = 2, nrow = 1, 
+          labels = c("A", "B"),
+          widths = c(1, 1.8)
+) %>%
+  annotate_figure(top = text_grob("Trace Minerals", color = "black", face = "bold", size = 14))
+
+ggsave(here::here("output", "plots", "mineral_plate_simpler.png"), width = 11, height = 8, bg = "white")
+
+
 #### Take home####
 ## Co and Zn declining through time, Fe, Cu, and Zn lower in pen, Fe, Co, and Zn lower in old animals.
 ## Se increasing with increased penning. All other temporal effects are happening irrespective of capture location or penning.
@@ -836,6 +929,62 @@ haptoglobin %>%
     max = max(`Haptoglobin g/L`),
     n = n()
   )
+
+
+
+hapto_summary <- haptoglobin %>%
+  drop_na(`Haptoglobin g/L`)%>%
+  mutate(value=`Haptoglobin g/L`,
+         name="Haptoglobin (g/L)")%>%
+  mutate(median=median(value),
+         sd=sd(value),
+         lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                       TRUE~0),
+         ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  group_by(name,loc.lastyr,pooled)%>%
+  summarise(median=median(value),
+            sd=sd(value),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd),
+            n=n(),
+            min=min(Year),
+            max=max(Year))%>%
+  mutate(values=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"),
+         `n (years)`=paste0(n,
+                            " (",
+                            min,
+                            "-",
+                            max,
+                            ")"))%>%
+  select(name, loc.lastyr, pooled,values,`n (years)`)%>%
+  pivot_wider(names_from=loc.lastyr, values_from=c("values","n (years)"))%>%
+  mutate(class="Inflammation",
+         sample="blood serum",
+         collection="at capture")%>%
+  ungroup
+
+hapto_summary <- hapto_summary%>%
+  left_join(haptoglobin %>%
+              drop_na(`Haptoglobin g/L`)%>%
+              mutate(value=`Haptoglobin g/L`,
+                     name="Haptoglobin (g/L)")%>%
+              group_by(name)%>%
+              kruskal_test(value ~ loc.lastyr)%>%
+              select(name,`p value (Pen vs. Free-range)`=p),
+            by="name")
+
 
 ## plot
 ggplot(haptoglobin, aes(y = calf_succ, x = `Haptoglobin g/L`)) +
@@ -919,7 +1068,7 @@ hapto.time <- ggplot(haptoglobin) +
 
 ## effect through time
 haptoglobin %>%
-  do(tidy(lm(`Haptoglobin g/L` ~ Year * loc.lastyr, .))) %>%
+  do(tidy(lm(`Haptoglobin g/L` ~ Year + loc.lastyr, .))) %>%
   filter(term != "(Intercept)") %>%
   mutate(sig = case_when(abs(statistic) >= 1.96 ~ "*", TRUE ~ ""))
 
@@ -929,12 +1078,15 @@ plot_model(m5, "diag") ## VIF is wonky
 summary(m5)
 
 
-## effect through repeated penning
+## effect through repeated penning vs time
 haptoglobin %>%
   filter(loc == "Pen") %>%
   do(tidy(lm(`Haptoglobin g/L` ~ Year + stay_in_pen, .))) %>%
   filter(term != "(Intercept)") %>%
-  mutate(sig = case_when(abs(statistic) >= 1.96 ~ "*", TRUE ~ "")) ## no effect
+  mutate(sig = case_when(abs(statistic) >= 1.96 ~ "*", TRUE ~ ""))
+
+
+
 
 #### Take home####
 ## calf effect not significant
@@ -960,6 +1112,10 @@ ggsave(here::here("output", "plots", "haptoglobin_plate.png"), width = 10, heigh
 HairCort <- individual_data %>%
   drop_na(hair_cort) %>%
   mutate(weight = as.numeric(weight))
+
+# remove outlier
+HairCort <- HairCort %>%
+  filter(hair_cort < 200)
 
 ## mean
 cort.comparepooled <- individual_data %>%
@@ -996,9 +1152,61 @@ cort.comparepooled <- individual_data %>%
             
             by="type")
 
-# remove outlier
-HairCort <- HairCort %>%
-  filter(hair_cort < 200)
+
+
+cort_summary <- individual_data %>%
+  drop_na(hair_cort)%>%
+  mutate(value=`hair_cort`,
+         name="Hair cortisol (pg/mg)")%>%
+  mutate(median=median(value),
+         sd=sd(value),
+         lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                       TRUE~0),
+         ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  group_by(name,loc.lastyr,pooled)%>%
+  summarise(median=median(value),
+            sd=sd(value),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd),
+            n=n(),
+            min=min(Year),
+            max=max(Year))%>%
+  mutate(values=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"),
+         `n (years)`=paste0(n,
+                            " (",
+                            min,
+                            "-",
+                            max,
+                            ")"))%>%
+  select(name, loc.lastyr, pooled,values,`n (years)`)%>%
+  pivot_wider(names_from=loc.lastyr, values_from=c("values","n (years)"))%>%
+  mutate(class="Stress",
+         sample="hair",
+         collection="at capture")%>%
+  ungroup
+
+cort_summary <- cort_summary%>%
+  left_join(individual_data %>%
+              drop_na(hair_cort)%>%
+              mutate(value=`hair_cort`,
+                     name="Hair cortisol (pg/mg)")%>%
+              group_by(name)%>%
+              kruskal_test(value ~ loc.lastyr)%>%
+              select(name,`p value (Pen vs. Free-range)`=p),
+            by="name")
+
 
 
 HairCort %>%
@@ -1153,6 +1361,11 @@ HairCort %>%
   drop_na(calf_succ) %>%
   kruskal_test(hair_cort ~ calf_succ)
 
+HairCort %>%
+  drop_na(calf_succ) %>%
+  filter(preg=="preg")%>%
+  kruskal_test(hair_cort ~ calf_succ)
+
 # Pregnancy
 HairCort %>%
   drop_na(preg) %>%
@@ -1162,8 +1375,7 @@ HairCort %>%
 HairCort %>%
   drop_na(calf_3) %>%
   dunn_test(hair_cort ~ calf_3) %>%
-  arrange(p) ## weak effect of Alive vs stillborn
-
+  arrange(p) 
 
 
 ## not sig for preg/not or calf result
@@ -1370,7 +1582,7 @@ cort.time2 <- ggplot(HairCort, aes(x = factor(Year), y = hair_cort, fill = facto
   geom_boxplot(position = position_dodge(0.3), width = .4, outlier.shape = NA, alpha = 0.4) +
   geom_point(position = position_dodge(0.3), height = 0, width = 0, alpha = .6, show_guide = FALSE) +
   theme_ipsum() +
-  labs(x = "", y = "Hair cortisol (pg/mg)", fill = "Location", shape = "Location") +
+  labs(x = "", y = "Hair cortisol (pg/mg)", fill = "Location prev. yr", shape = "Location prev. yr") +
   theme(
     axis.title.x = element_text(size = 15, margin = margin(t = 10, r = 0, b = 0, l = 0)),
     axis.title.y = element_text(size = 15, margin = margin(t = 0, r = 10, b = 0, l = 0)),
@@ -1441,7 +1653,7 @@ ggsave(here::here("output", "plots", "hair.cort_plate_trends.png"), width = 7, h
 #*********************** #
 
 pathogens <- individual_data %>%
-  select(Wii_ID, Year, calf_succ, preg, calf_3, stay_in_pen, Toxoplasma:Erysip_simplified, loc) %>%
+  select(Wii_ID, Year, calf_succ, preg, calf_3, stay_in_pen, Toxoplasma:Erysip_simplified, loc, loc.lastyr) %>%
   drop_na(calf_succ) %>%
   pivot_longer(Toxoplasma:Erysip_simplified) %>%
   mutate(
@@ -1503,6 +1715,83 @@ patho.comparepooled  <- patho.prevalence%>%
               select(name,single),
             by="name")%>%
   rename(type=name)
+
+patho_summary <- pathogens%>%
+  drop_na(value)%>%
+  group_by(name)%>%
+  mutate(pos=sum(value=="Positive"),
+            neg=sum(value=="Negative"),
+            total=pos+neg,
+            median=pos/total,
+            sd=sqrt((median*(1-median))/total),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  group_by(name,loc.lastyr,pooled)%>%
+  summarise(pos=sum(value=="Positive"),
+         neg=sum(value=="Negative"),
+         total=pos+neg,
+         median=pos/total,
+         sd=sqrt((median*(1-median))/total),
+         lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                       TRUE~0),
+         ucl=median+(1.96*sd),
+         n=n(),
+         min=min(Year),
+         max=max(Year))%>%
+  mutate(values=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"),
+         `n (years)`=paste0(n,
+                            " (",
+                            min,
+                            "-",
+                            max,
+                            ")"))%>%
+  select(name, loc.lastyr, pooled,values,`n (years)`)%>%
+  pivot_wider(names_from=loc.lastyr, values_from=c("values","n (years)"))%>%
+  mutate(class="Pathogens",
+         sample="blood serum",
+         collection="at capture")%>%
+  ungroup
+
+patho.stats.summary <- pathogens%>%
+  drop_na(value)%>%
+  group_by(name,loc.lastyr)%>%
+  summarise(pos=sum(value=="Positive"),
+            total=n())%>%
+  ungroup
+
+patho.stats <- tibble()
+for (i in 1:length(unique(patho.stats.summary$name))) {
+  a <- patho.stats.summary%>%
+    filter(name%in%unique(patho.stats.summary$name)[i])
+  
+  patho.stats <- rbind(patho.stats,
+                       tibble(name=unique(patho.stats.summary$name)[i],
+                       p=prop_test(x = a$pos,
+            n = a$total)$p))
+}
+
+
+patho_summary <- patho_summary%>%
+  left_join(patho.stats%>%
+              select(name, `p value (Pen vs. Free-range)`=p),
+            by="name")
+
+?prop.test
+
+prop_test(x = c(12, 4),
+          n = c(73, 33))
 
 ##print all compares
 nutr.comparepooled%>%
@@ -1767,6 +2056,64 @@ FecalCort %>%
     n = n()
   )
 
+
+fecalcort_summary <- FecalCort %>%
+  mutate(value=`cortisol`,
+         name="FGM (ng/g)",
+         Year=year,
+         loc.lastyr=survey_type)%>%
+  drop_na(value)%>%
+  mutate(median=median(value),
+         sd=sd(value),
+         lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                       TRUE~0),
+         ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  group_by(name,loc.lastyr,pooled)%>%
+  summarise(median=median(value),
+            sd=sd(value),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd),
+            n=n(),
+            min=min(Year),
+            max=max(Year))%>%
+  mutate(values=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"),
+         `n (years)`=paste0(n,
+                            " (",
+                            min,
+                            "-",
+                            max,
+                            ")"))%>%
+  select(name, loc.lastyr, pooled,values,`n (years)`)%>%
+  pivot_wider(names_from=loc.lastyr, values_from=c("values","n (years)"))%>%
+  mutate(class="Stress",
+         sample="fecal pellets",
+         collection="penning season")%>%
+  ungroup
+
+fecalcort_summary <- fecalcort_summary%>%
+  left_join(FecalCort %>%
+              mutate(value=`cortisol`,
+                     name="FGM (ng/g)",
+                     Year=year,
+                     loc.lastyr=survey_type)%>%
+              drop_na(value)%>%
+              group_by(name)%>%
+              kruskal_test(value ~ loc.lastyr)%>%
+              select(name,`p value (Pen vs. Free-range)`=p),
+            by="name")
+
 ## by pen status and season
 FecalCort %>%
   group_by(month, survey_type) %>%
@@ -1907,6 +2254,64 @@ FecalNit %>%
     mean = mean(fecal_nitro_perc),
     sd = sd(fecal_nitro_perc) / sqrt(n())
   )
+
+fecalnit_summary <- FecalNit %>%
+  mutate(value=`fecal_nitro_perc`,
+         name="Fecal nitrogen (%)",
+         Year=year,
+         loc.lastyr=survey_type)%>%
+  drop_na(value)%>%
+  mutate(median=median(value),
+         sd=sd(value),
+         lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                       TRUE~0),
+         ucl=median+(1.96*sd))%>%
+  mutate(pooled=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"))%>%
+  group_by(name,loc.lastyr,pooled)%>%
+  summarise(median=median(value),
+            sd=sd(value),
+            lcl=case_when(median-(1.96*sd)>0~median-(1.96*sd),
+                          TRUE~0),
+            ucl=median+(1.96*sd),
+            n=n(),
+            min=min(Year),
+            max=max(Year))%>%
+  mutate(values=paste0(median%>%round(2),
+                       " (",
+                       lcl%>%round(2),
+                       "-",
+                       ucl%>%round(2),
+                       ")"),
+         `n (years)`=paste0(n,
+                            " (",
+                            min,
+                            "-",
+                            max,
+                            ")"))%>%
+  select(name, loc.lastyr, pooled,values,`n (years)`)%>%
+  pivot_wider(names_from=loc.lastyr, values_from=c("values","n (years)"))%>%
+  mutate(class="Nutrition",
+         sample="fecal pellets",
+         collection="penning season")%>%
+  ungroup
+
+fecalnit_summary <- fecalnit_summary%>%
+  left_join(FecalNit %>%
+              mutate(value=`fecal_nitro_perc`,
+                     name="Fecal nitrogen (%)",
+                     Year=year,
+                     loc.lastyr=survey_type)%>%
+              drop_na(value)%>%
+              group_by(name)%>%
+              kruskal_test(value ~ loc.lastyr)%>%
+              select(name,`p value (Pen vs. Free-range)`=p),
+            by="name")
+
 
 ## check if males and females are stastically different?
 FecalNit %>%
@@ -2054,3 +2459,28 @@ ggsave(here::here("output", "plots", "fecal.cort-nit.season.png"), width = 4, he
 #### Take home####
 ## no effect of sex, keep sexes pooled.
 ## pen slightly higher fecal nitrogen
+
+
+#### Build summary table####
+nutr.summary%>%
+  rbind(fecalnit_summary)%>%
+  rbind(hapto_summary)%>%
+  rbind(cort_summary)%>%
+  rbind(fecalcort_summary)%>%
+  rbind(patho_summary)%>%
+  mutate(`p value (Pen vs. Free-range)`=case_when(`p value (Pen vs. Free-range)`<0.001~"<0.001",
+                                                  `p value (Pen vs. Free-range)`>=0.001~round(`p value (Pen vs. Free-range)`,3)%>%as.character()))%>%
+  select(Class=class,
+         Sample=sample,
+         Collection=collection,
+         `Health metric`=name,
+         pooled,
+         `free-ranging n (years)`=`n (years)_Free-ranging`,
+         `pen n (years)`=`n (years)_Pen`,
+         `free-ranging values`=`values_Free-ranging`,
+         `pen values `=`values_Pen`,
+         `p value (Pen vs. Free-range)`)%>%
+  write_csv(here::here("output/tables/summary_table.csv"))
+
+
+
