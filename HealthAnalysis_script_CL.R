@@ -1377,6 +1377,10 @@ HairCort %>%
   dunn_test(hair_cort ~ calf_3) %>%
   arrange(p) 
 
+HairCort %>%
+  filter(calf_3%in%c("alive","abort")) %>%
+  kruskal_test(hair_cort ~ calf_3)
+
 
 ## not sig for preg/not or calf result
 
