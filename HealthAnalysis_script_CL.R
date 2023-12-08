@@ -1,6 +1,7 @@
 # Analyzing Klinse-Za health samples # 
 
 ## load packages ##
+library(renv)
 library(here)
 library(rstatix)
 library(hrbrthemes)
@@ -520,7 +521,7 @@ ggarrange(nutr.compare, nutr.comp.betas,
 ) %>%
   annotate_figure(top = text_grob("Trace Mineral Comparisons", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "mineral_compare_plate.png"), width = 12, height = 8, bg = "white")
+ggsave(here::here("output", "plots", "mineral_compare_plate.jpg"), width = 12, height = 8, bg = "white", dpi=300)
 
 
 
@@ -544,7 +545,7 @@ nutr.repro <- ggplot(CalvingNutri.long %>%
   scale_y_continuous(breaks = breaks_pretty(n = 3)) +
   facet_wrap(vars(name), scales = "free_y", ncol = 4)
 
-# ggsave(here::here("output","plots","Repro.nutrient.png"),width=10,height=5, bg="white")
+# ggsave(here::here("output","plots","Repro.nutrient.jpg"),width=10,height=5, bg="white", dpi=300)
 
 
 ## statistics for pen only
@@ -599,7 +600,7 @@ ggplot(CalvingNutri.long %>% drop_na(stay_in_pen), aes(x = stay_in_pen, y = valu
   ) +
   facet_wrap(vars(name), scales = "free_y")
 
-# ggsave(here::here("output","plots","pentime.nutrient.png"),width=7,height=7, bg="white")
+# ggsave(here::here("output","plots","pentime.nutrient.jpg"),width=7,height=7, bg="white", dpi=300)
 
 ## check annual variaton
 ggplot(CalvingNutri.long, aes(x = Year, y = value)) +
@@ -653,7 +654,7 @@ nutr.time <- ggplot(CalvingNutri.long, aes(x = Year, y = value, fill = loc.lasty
   scale_y_continuous(breaks = breaks_pretty(n = 2)) +
   facet_grid(name ~ loc.lastyr, scales = "free_y")
 
-# ggsave(here::here("output","plots","annual.nutrient.png"),width=5,height=10, bg="white")
+# ggsave(here::here("output","plots","annual.nutrient.jpg"),width=5,height=10, bg="white", dpi=300)
 
 
 
@@ -785,7 +786,7 @@ nutr.beta <- CalvingNutri.long %>%
     legend.title = element_text(size = 15),
     legend.position = "right"
   )
-# ggsave(here::here("output","plots","nutrient.betas.png"),width=8,height=6, bg="white")
+# ggsave(here::here("output","plots","nutrient.betas.jpg"),width=8,height=6, bg="white", dpi=300)
 
 
 ## check interaction
@@ -839,7 +840,7 @@ ggarrange(ggarrange(nutr.repro, nutr.beta, ncol = 1, nrow = 2, labels = c("A", "
 ) %>%
   annotate_figure(top = text_grob("Trace Minerals", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "mineral_plate.png"), width = 11, height = 9, bg = "white")
+ggsave(here::here("output", "plots", "mineral_plate.jpg"), width = 11, height = 9, bg = "white", dpi=300)
 
 
 nutr.repro2 <- ggplot(CalvingNutri.long %>%
@@ -868,7 +869,7 @@ ggarrange(nutr.repro2, nutr.beta, ncol = 2, nrow = 1,
 ) %>%
   annotate_figure(top = text_grob("Trace Minerals", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "mineral_plate_simpler.png"), width = 11, height = 8, bg = "white")
+ggsave(here::here("output", "plots", "mineral_plate_simpler.jpg"), width = 11, height = 8, bg = "white", dpi=300)
 
 
 #### Take home####
@@ -1101,7 +1102,7 @@ ggarrange(hapto.repro, hapto.time,
 ) %>%
   annotate_figure(top = text_grob("Haptoglobin", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "haptoglobin_plate.png"), width = 10, height = 5, bg = "white")
+ggsave(here::here("output", "plots", "haptoglobin_plate.jpg"), width = 10, height = 5, bg = "white", dpi=300)
 
 
 
@@ -1572,7 +1573,7 @@ ggarrange(cort.compare, cort.mass, cort.condition, cort.calf, cort.penstay, cort
 ) %>%
   annotate_figure(top = text_grob("Hair Cortisol", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "hair.cort_plate.png"), width = 10, height = 8, bg = "white")
+ggsave(here::here("output", "plots", "hair.cort_plate.jpg"), width = 10, height = 8, bg = "white", dpi=300)
 
 
 m1 <- lm(hair_cort ~ Year * loc.lastyr, HairCort)
@@ -1628,7 +1629,7 @@ ggarrange(cort.time2, cort.compare.time,
 ) %>%
   annotate_figure(top = text_grob("Hair Cortisol Trends", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "hair.cort_plate_trends.png"), width = 7, height = 8, bg = "white")
+ggsave(here::here("output", "plots", "hair.cort_plate_trends.jpg"), width = 7, height = 8, bg = "white", dpi=300)
 
 
 
@@ -1830,7 +1831,7 @@ pathogens.repro <- pathogens %>%
   ) +
   facet_wrap(vars(name), scales = "free_x")
 
-# ggsave(here::here("output","plots","pathogens.png"),width=6,height=6, bg="white")
+# ggsave(here::here("output","plots","pathogens.jpg"),width=6,height=6, bg="white", dpi=300)
 
 ## statistics
 
@@ -2015,7 +2016,7 @@ ggarrange(pathogens.comp.betas, pathogens.repro,
   ) %>%
   annotate_figure(top = text_grob("Pathogens", color = "black", face = "bold", size = 14))
 
-ggsave(here::here("output", "plots", "pathogen_compare_plate.png"), width = 10, height = 8, bg = "white")
+ggsave(here::here("output", "plots", "pathogen_compare_plate.jpg"), width = 10, height = 8, bg = "white", dpi=300)
 
 
 #### Take home####
@@ -2457,7 +2458,7 @@ ggplot(FecalNit %>% mutate(value = fecal_nitro_perc, name = "Fecal nitrogen (%)"
   facet_wrap(vars(name), nrow = 2, scales = "free_y")
 
 
-ggsave(here::here("output", "plots", "fecal.cort-nit.season.png"), width = 4, height = 7, bg = "white")
+ggsave(here::here("output", "plots", "fecal.cort-nit.season.jpg"), width = 4, height = 7, bg = "white", dpi=300)
 
 
 #### Take home####

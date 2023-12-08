@@ -1,16 +1,16 @@
-Class,Sample,Collection,Health metric,pooled,free-ranging n (years),free-ranging values,pen n (years) pen,pen values ,p value (Pen vs. Free-range)
-Trace minerals,blood serum,at capture,Co (ng/mL),0.5 (0-1.73),71 (2014-2021),0.53 (0-1.77),33 (2015-2021),0.48 (0-1.7),0.15
-Trace minerals,blood serum,at capture,Cu (ug/mL),0.44 (0.26-0.63),71 (2014-2021),0.44 (0.25-0.63),33 (2015-2021),0.45 (0.29-0.61),0.953
-Trace minerals,blood serum,at capture,Fe (ug/mL),3.3 (0-14.42),71 (2014-2021),3.4 (0-11.46),33 (2015-2021),3.2 (0-19.09),0.384
-Trace minerals,blood serum,at capture,Mn (ng/mL),2.7 (0.63-4.77),71 (2014-2021),2.8 (0.62-4.98),33 (2015-2021),2.5 (0.75-4.25),0.047
-Trace minerals,blood serum,at capture,Mo (ng/mL),0.45 (0-14.16),71 (2014-2021),0.45 (0-16.43),33 (2015-2021),1.1 (0-7.12),0.578
-Trace minerals,blood serum,at capture,Se (ug/mL),0.06 (0-0.18),71 (2014-2021),0.06 (0-0.12),33 (2015-2021),0.07 (0-0.26),0.005
-Trace minerals,blood serum,at capture,Zn (ug/mL),0.64 (0.27-1),71 (2014-2021),0.65 (0.25-1.05),33 (2015-2021),0.6 (0.31-0.89),0.091
-Nutrition,fecal pellets,penning season,Fecal nitrogen (%),2.7 (1.44-3.96),210 (2017-2019),2.4 (1.11-3.69),258 (2016-2019),2.9 (1.77-4.03),<0.001
-Inflammation,blood serum,at capture,Haptoglobin (g/L),0.25 (0-0.53),70 (2014-2021),0.26 (0-0.57),32 (2015-2021),0.24 (0.08-0.4),0.068
-Stress,hair,at capture,Hair cortisol (pg/mg),5.42 (0-46.38),73 (2014-2021),4.97 (0-53.5),31 (2015-2021),6.29 (0-15.68),0.352
-Stress,fecal pellets,penning season,FGM (ng/g),92.88 (0-476.44),501 (2017-2019),102.43 (0-534.92),305 (2016-2019),86.16 (0-347.41),<0.001
-Pathogens,blood serum,at capture,Alphaherpesvirus,0.15 (0.08-0.22),73 (2014-2021),0.16 (0.08-0.25),33 (2015-2021),0.12 (0.01-0.23),0.778
-Pathogens,blood serum,at capture,Erysipelothrix,0.44 (0.35-0.54),74 (2014-2021),0.47 (0.36-0.59),34 (2015-2021),0.38 (0.22-0.55),0.502
-Pathogens,blood serum,at capture,Neospora,0.03 (0-0.06),74 (2014-2021),0.01 (0-0.04),32 (2015-2021),0.06 (0-0.15),0.448
-Pathogens,blood serum,at capture,Toxoplasma,0 (0-0),73 (2014-2021),0 (0-0),32 (2015-2021),0 (0-0),NA
+Class,Sample,Collection,Health metric,pooled,free-ranging n (years),pen n (years),free-ranging values,pen values ,p value (Pen vs. Free-range)
+Trace minerals,blood serum,at capture,Co (ng/mL),0.5 (0-1.73),71 (2014-2021),33 (2015-2021),0.53 (0-1.77),0.48 (0-1.7),0.15
+Trace minerals,blood serum,at capture,Cu (ug/mL),0.44 (0.26-0.63),71 (2014-2021),33 (2015-2021),0.44 (0.25-0.63),0.45 (0.29-0.61),0.953
+Trace minerals,blood serum,at capture,Fe (ug/mL),3.3 (0-14.42),71 (2014-2021),33 (2015-2021),3.4 (0-11.46),3.2 (0-19.09),0.384
+Trace minerals,blood serum,at capture,Mn (ng/mL),2.7 (0.63-4.77),71 (2014-2021),33 (2015-2021),2.8 (0.62-4.98),2.5 (0.75-4.25),0.047
+Trace minerals,blood serum,at capture,Mo (ng/mL),0.45 (0-14.16),71 (2014-2021),33 (2015-2021),0.45 (0-16.43),1.1 (0-7.12),0.578
+Trace minerals,blood serum,at capture,Se (ug/mL),0.06 (0-0.18),71 (2014-2021),33 (2015-2021),0.06 (0-0.12),0.07 (0-0.26),0.005
+Trace minerals,blood serum,at capture,Zn (ug/mL),0.64 (0.27-1),71 (2014-2021),33 (2015-2021),0.65 (0.25-1.05),0.6 (0.31-0.89),0.091
+Nutrition,fecal pellets,penning season,Fecal nitrogen (%),2.7 (1.44-3.96),210 (2017-2019),258 (2016-2019),2.4 (1.11-3.69),2.9 (1.77-4.03),<0.001
+Inflammation,blood serum,at capture,Haptoglobin (g/L),0.25 (0-0.53),70 (2014-2021),32 (2015-2021),0.26 (0-0.57),0.24 (0.08-0.4),0.068
+Stress,hair,at capture,Hair cortisol (pg/mg),5.42 (0-46.38),73 (2014-2021),31 (2015-2021),4.97 (0-53.5),6.29 (0-15.68),0.352
+Stress,fecal pellets,penning season,FGM (ng/g),92.88 (0-476.44),501 (2017-2019),305 (2016-2019),102.43 (0-534.92),86.16 (0-347.41),<0.001
+Pathogens,blood serum,at capture,Alphaherpesvirus,0.15 (0.08-0.22),73 (2014-2021),33 (2015-2021),0.16 (0.08-0.25),0.12 (0.01-0.23),0.778
+Pathogens,blood serum,at capture,Erysipelothrix,0.44 (0.35-0.54),74 (2014-2021),34 (2015-2021),0.47 (0.36-0.59),0.38 (0.22-0.55),0.502
+Pathogens,blood serum,at capture,Neospora,0.03 (0-0.06),74 (2014-2021),32 (2015-2021),0.01 (0-0.04),0.06 (0-0.15),0.448
+Pathogens,blood serum,at capture,Toxoplasma,0 (0-0),73 (2014-2021),32 (2015-2021),0 (0-0),0 (0-0),NA
